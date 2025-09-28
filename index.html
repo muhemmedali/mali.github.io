@@ -1024,7 +1024,7 @@
       if (!input) return;
 
       let parts = input.split(" ");
-      let key = parts.shift();
+      let key = parts.shift().toLowerCase();;
 
       if (!metadata[key]) {
         alert(`key ${key} not found`)
