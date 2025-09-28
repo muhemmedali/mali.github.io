@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Expense Tracker</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    #inputBar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #f8f9fa;
+      padding: 10px;
+      border-top: 1px solid #ddd;
+    }
+
+    #dataTable {
+      margin-bottom: 80px;
+      /* space for input bar */
+    }
+  </style>
+</head>
+
+<body class="d-flex flex-column vh-100">
+
+  <!-- Header -->
+  <div class="container-fluid text-center bg-primary text-white py-3">
+    <h2>Expense Tracker</h2>
+  </div>
+
+  <!-- Table container -->
+  <div class="container-fluid flex-grow-1 my-2">
+    <div id="tableContainer" class="h-100" style="overflow-y: auto;">
+      <table class="table table-striped table-bordered w-100" id="dataTable">
+        <thead class="table-light">
+          <tr id="tableHead"></tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Input bar -->
+  <div id="inputBar" class="d-flex p-2 border-top">
+    <input type="text" id="inputText" class="form-control me-2"
+      placeholder="Enter data (space-separated)">
+    <button id="submitBtn" class="btn btn-primary">➤</button>
+  </div>
+
+  <script>
+    let localData = [];
+    const columns = ["Account", "Category", "Sub-Category", "Date", "Month", "Mode", "Description", "AR", "AP", "Total Received", "Paid", "Renaming Amount", "Liablity", "Notes"];
+
+    const metadata = {
+      // Transport
+      petrol: {
+        Account: "Transport Expense",
+        Category: "Petrol",
+        "Sub-Category": "",
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+      car: {
+        Account: "Transport Expense",
+        Category: "Car",
+        "Sub-Category": "",
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+      bykea: {
+        Account: "Transport Expense",
+        Category: "Bykea",
+        "Sub-Category": (parts) => AsIs(parts),
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+      cartax: {
+        Account: "Transport Expense",
+        Category: "Tax",
+        "Sub-Category": "",
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+
+      // Office Expense 
+      offtax: {
+        Account: "Office Expense",
+        Category: "Tax",
+        "Sub-Category": (parts) => AsIs(parts),
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+      // Office Expense 
+      offfood: {
+        Account: "Office Expense",
+        Category: "Food",
+        "Sub-Category": "",
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+      offacc: {
+        Account: "Office Expense",
+        Category: "Accessories",
+        "Sub-Category": "",
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+      offkesc: {
+        Account: "Office Expense",
+        Category: "KESC",
+        "Sub-Category": (parts) => AsIs(parts),
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+      offbrokery: {
+        Account: "Office Expense",
+        Category: "Brokery",
+        "Sub-Category": (parts) => AsIs(parts),
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+      offDeposit: {
+        Account: "Office Expense",
+        Category: "Deposit",
+        "Sub-Category": (parts) => AsIs(parts),
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+      offDomain: {
+        Account: "Office Expense",
+        Category: "Domain",
+        "Sub-Category": "",
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+      offinternet: {
+        Account: "Office Expense",
+        Category: "Internet",
+        "Sub-Category": "",
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+      offmaint: {
+        Account: "Office Expense",
+        Category: "Maintenance",
+        "Sub-Category": (parts) => AsIs(parts),
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },      
+      offrent: {
+        Account: "Office Expense",
+        Category: "Rent",
+        "Sub-Category": (parts) => AsIs(parts),
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },     
+      offrenovation: {
+        Account: "Office Expense",
+        Category: "Renovation",
+        "Sub-Category": (parts) => AsIs(parts),
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },     
+
+      
+      // Home Expense 
+      homemed: {
+        Account: "Home Expense",
+        Category: "Medical",
+        "Sub-Category": (parts) => AsIs(parts),
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },           
+      homefood: {
+        Account: "Home Expense",
+        Category: "Food",
+        "Sub-Category": (parts) => AsIs(parts),
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },           
+      homeclothe: {
+        Account: "Home Expense",
+        Category: "Clothes",
+        "Sub-Category": (parts) => AsIs(parts),
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+      homeedu: {
+        Account: "Home Expense",
+        Category: "Education",
+        "Sub-Category": (parts) => AsIs(parts),
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+      homeclothe: {
+        Account: "Home Expense",
+        Category: "Clothes",
+        "Sub-Category": (parts) => AsIs(parts),
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+      homegift: {
+        Account: "Home Expense",
+        Category: "Gift",
+        "Sub-Category": (parts) => AsIs(parts),
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+      homegroc: {
+        Account: "Home Expense",
+        Category: "GroceryMonthly",
+        "Sub-Category": "",
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+      homeacc: {
+        Account: "Home Expense",
+        Category: "Accessories",
+        "Sub-Category": (parts) => AsIs(parts),
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },      
+      homefitra: {
+        Account: "Home Expense",
+        Category: "Fitra",
+        "Sub-Category": "",
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },      
+      homeinternet: {
+        Account: "Home Expense",
+        Category: "Internet",
+        "Sub-Category": "",
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },      
+      homekesc: {
+        Account: "Home Expense",
+        Category: "KESC",
+        "Sub-Category": "",
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },      
+      homemaint: {
+        Account: "Home Expense",
+        Category: "Maintenance",
+        "Sub-Category": "",
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },      
+      homessgc: {
+        Account: "Home Expense",
+        Category: "SSGC",
+        "Sub-Category": "",
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },      
+      homemisc: {
+        Account: "Home Expense",
+        Category: "Misc",
+        "Sub-Category": "",
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },      
+      homepamper: {
+        Account: "Home Expense",
+        Category: "Pamper",
+        "Sub-Category": "",
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },      
+      homemob: {
+        Account: "Home Expense",
+        Category: "Mobile",
+        "Sub-Category": (parts) => AsIs(parts),
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },      
+      homeparlour: {
+        Account: "Home Expense",
+        Category: "Parlour",
+        "Sub-Category": "",
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },      
+      homepocket: {
+        Account: "Home Expense",
+        Category: "Pocket",
+        "Sub-Category": (parts) => AsIs(parts),
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },      
+      homerent: {
+        Account: "Home Expense",
+        Category: "Rent",
+        "Sub-Category": "",
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+      homeschool: {
+        Account: "Home Expense",
+        Category: "School",
+        "Sub-Category": (parts) => AsIs(parts),
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+      hometoy: {
+        Account: "Home Expense",
+        Category: "Toys",
+        "Sub-Category": "",
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+      homewater: {
+        Account: "Home Expense",
+        Category: "Toys",
+        "Sub-Category": "",
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+      homeups: {
+        Account: "Home Expense",
+        Category: "UPS",
+        "Sub-Category": "",
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+
+      // Personal Expense 
+      persoacc: {
+        Account: "Personal Expense",
+        Category: "Accessories",
+        "Sub-Category": "",
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+      persoclothe: {
+        Account: "Personal Expense",
+        Category: "Clothes",
+        "Sub-Category": "",
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+      persofood: {
+        Account: "Personal Expense",
+        Category: "Food",
+        "Sub-Category": "",
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+      persomed: {
+        Account: "Personal Expense",
+        Category: "Medical",
+        "Sub-Category": "",
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+      persomob: {
+        Account: "Personal Expense",
+        Category: "Mobile",
+        "Sub-Category": "",
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+      persoparlour: {
+        Account: "Personal Expense",
+        Category: "Parlour",
+        "Sub-Category": "",
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+
+      // AccountPayable
+      apbrokery: {
+        Account: "AccountPayable",
+        Category: "Brokery",
+        "Sub-Category": (parts) => AsIs(parts),
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+      apdeposit: {
+        Account: "AccountPayable",
+        Category: "Deposit",
+        "Sub-Category": (parts) => AsIs(parts),
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+      apinstallment: {
+        Account: "AccountPayable",
+        Category: "Installment",
+        "Sub-Category": (parts) => AsIs(parts),
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+      apkesc: {
+        Account: "AccountPayable",
+        Category: "KESC",
+        "Sub-Category": (parts) => AsIs(parts),
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },      
+      apmaint: {
+        Account: "AccountPayable",
+        Category: "Maintenance",
+        "Sub-Category": (parts) => AsIs(parts),
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+      appurchase: {
+        Account: "AccountPayable",
+        Category: "Purchase",
+        "Sub-Category": (parts) => AsIs(parts),
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+      aprent: {
+        Account: "AccountPayable",
+        Category: "Rent",
+        "Sub-Category": (parts) => AsIs(parts),
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+      aptax: {
+        Account: "AccountPayable",
+        Category: "Tax",
+        "Sub-Category": (parts) => AsIs(parts),
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+      apwater: {
+        Account: "AccountPayable",
+        Category: "Water",
+        "Sub-Category": (parts) => AsIs(parts),
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+
+      // Account Receivable
+      ardeposit: {
+        Account: "AccountReceivable",
+        Category: "Deposit",
+        "Sub-Category": (parts) => AsIs(parts),
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+      arrent: {
+        Account: "AccountReceivable",
+        Category: "Rent",
+        "Sub-Category": (parts) => AsIs(parts),
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: (parts) => AsIs(parts),
+        AP: "",
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+
+      
+      khair: {
+        Account: "Khair",
+        Category: "",
+        "Sub-Category": (parts) => AsIs(parts),
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
+
+    }
+
+    // After appending a row
+
+    function getDate(val) {
+      return new Date().toISOString().substring(0, 10);
+    }
+
+    function getMonth(val) {
+      return `${val.shift()}-${new Date().getFullYear()}`;
+    }
+
+    function AsIs(val) {
+      return `${val.shift()}`;
+    }
+
+    function getDescription(val) {
+      let tmp = val.shift();
+      let desc = val.join(" ")
+      val.unshift(tmp);
+      return desc.trim();
+    }
+
+    // Initialize table header and load data from localStorage
+    $(document).ready(function () {
+      let headerRow = "";
+      columns.forEach(col => headerRow += `<th>${col}</th>`);
+      $("#tableHead").html(headerRow);
+
+      loadFromLocalStorage();
+    });
+
+    // Submit handler
+    $("#submitBtn").on("click", submitHandler);
+
+    // Enter key handler
+    $("#inputText").on("keypress", function (e) {
+      if (e.which === 13) { // 13 = Enter key
+        e.preventDefault(); // prevent form submission/reload
+        submitHandler();
+      }
+    });
+
+    function submitHandler() {
+      let input = $("#inputText").val().trim();
+      if (!input) return;
+
+      let parts = input.split(" ");
+      let key = parts.shift();
+
+      if (!metadata[key]) {
+        alert(`key ${key} not found`)
+        return;
+      }
+
+      let row = {};
+      let template = metadata[key]; // get template for the key 
+      columns.forEach((col) => {
+        let rule = template[col];
+        if (typeof rule === "function") {
+          row[col] = rule(parts);
+        } else {
+          row[col] = rule || "";
+        }
+      });
+
+      localData.push(row);
+      appendRow(row);
+      saveToLocalStorage();
+      saveToGoogleSheet(row);
+      
+      let container = document.getElementById("tableContainer");
+      container.scrollTop = container.scrollHeight;
+
+
+      $("#inputText").val("");
+    };
+
+    // Add row to table
+    function appendRow(row) {
+      let rowHtml = "<tr>";
+      columns.forEach(col => {
+        rowHtml += `<td>${row[col]}</td>`;
+      });
+      rowHtml += "</tr>";
+      $("#tableBody").append(rowHtml);
+    }
+
+    // Save all data to localStorage
+    function saveToLocalStorage() {
+      localStorage.setItem("expenseData", JSON.stringify(localData));
+    }
+
+    // Load data from localStorage
+    function loadFromLocalStorage() {
+      let stored = localStorage.getItem("expenseData");
+      if (stored) {
+        localData = JSON.parse(stored);
+        localData.forEach(row => appendRow(row));
+      }
+    }
+
+    // Send data to Google Sheets
+    function saveToGoogleSheet(row) {
+      // Replace with your Google Apps Script Web App URL
+      const scriptURL = "https://script.google.com/macros/s/AKfycbxhmy-s3QgdgMQrGeqQqRPNxnfA_b8pMPsqBqV0CWz4uw8dsHmRmbKlCw-5NZkbMZLQ/exec";
+
+      fetch(scriptURL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(row)
+      }).then(() => {
+        console.log("Data sent to Google Sheets:", row);
+      }).catch(err => console.error("Error:", err));
+    }
+  </script>
+</body>
+
+</html>
+
+<!-- 
+
+AKfycbxhmy-s3QgdgMQrGeqQqRPNxnfA_b8pMPsqBqV0CWz4uw8dsHmRmbKlCw-5NZkbMZLQ
+https://script.google.com/macros/s/AKfycbxhmy-s3QgdgMQrGeqQqRPNxnfA_b8pMPsqBqV0CWz4uw8dsHmRmbKlCw-5NZkbMZLQ/exec
+https://script.google.com/macros/library/d/18wMcfUgkjc7VWzaEGMTdS-QPMR63I-t9vJKAWRSx3zDIOaOo7oS2w3Jc/1
+Bank1 Wallet Food Aug 500 0
+
+
+
+
+  -->
