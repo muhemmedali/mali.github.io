@@ -665,8 +665,8 @@
       },
       homewater: {
         Account: "Home Expense",
-        Category: "Toys",
-        "Sub-Category": "",
+        Category: "Water",
+        "Sub-Category": (parts) => AsIs(parts),
         Date: (parts) => getDate(),
         Month: (parts) => getMonth(parts),
         Mode: (parts) => AsIs(parts),
