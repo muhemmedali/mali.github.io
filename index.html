@@ -650,7 +650,7 @@
       hometoy: {
         Account: "Home Expense",
         Category: "Toys",
-        "Sub-Category": "",
+        "Sub-Category": (parts) => AsIs(parts),
         Date: (parts) => getDate(),
         Month: (parts) => getMonth(parts),
         Mode: (parts) => AsIs(parts),
