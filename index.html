@@ -989,6 +989,22 @@
         Liability: "",
         Notes: ""
       },
+      armisc: {
+        Account: "AccountReceivable",
+        Category: "Misc",
+        "Sub-Category": (parts) => AsIs(parts),
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: (parts) => AsIs(parts),
+        AP: "",
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
 
       
       khair: {
