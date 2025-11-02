@@ -793,6 +793,22 @@
         Liability: "",
         Notes: ""
       },
+      persotravel: {
+        Account: "Personal Expense",
+        Category: "Travel",
+        "Sub-Category": (parts) => AsIs(parts),
+        Date: (parts) => getDate(),
+        Month: (parts) => getMonth(parts),
+        Mode: (parts) => AsIs(parts),
+        Description: (parts) => getDescription(parts),
+        AR: "",
+        AP: (parts) => AsIs(parts),
+        "Total Received": "",
+        Paid: "",
+        "Renaming Amount": "",
+        Liability: "",
+        Notes: ""
+      },
 
       // AccountPayable
       apbrokery: {
